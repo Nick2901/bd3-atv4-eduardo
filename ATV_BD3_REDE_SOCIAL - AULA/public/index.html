@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ATIVIDADE - REDE SOCIAL</title>
+        <link rel="stylesheet" href="./styles.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.js"></script>
+    </head>
+    <body>
+        <script src="socket.io/socket.io.js"></script>
+        <div class="header_container">
+            <img src="./images/rede.png" />
+            <h1>APENAS UMA REDE SOCIAL</h1>
+        </div>
+        <div class="button_post_container">
+            <button name="btn_post" id="btn_post">New Post</button>
+        </div>
+        <div class="posts_container"></div>
+        <div id="myModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div class="form_post_container">
+                    <h4>FAÇA UM POST</h4>
+                    <form name="frm_post" id="frm_post">
+                        <input 
+                            type="text" 
+                            name="txt_nome" 
+                            id="txt_nome"  
+                            placeholder="NICKNAME"
+                        >
+                        <br />
+                        <input 
+                            type="text" 
+                            name="txt_titulo" 
+                            id="txt_titulo" 
+                            placeholder="TITULO DO POST"
+                        >
+                        <br />
+                        <input 
+                            type="text" 
+                            name="txt_post" 
+                            id="txt_post"  
+                            placeholder="TEXTO DO POST"
+                        >
+                        <br />
+                        <button name="btn_postar" id="btn_postar">
+                            Postar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </body>
+    <script>
+        /***** ABERTURA/FECHAMENTO DO FORMUÁRIO MODAL *****/
+        let btn = document.getElementById('btn_post');
+        let modal = document.getElementById("myModal");
+        let span = document.getElementsByClassName("close")[0];
+
+        //ABRE O FORMULÁRIO MODAL:
+        btn.addEventListener('click', function (event) {
+            event.preventDefault();
+            modal.style.display = "block";
+        });
+        //FECHA O FORMULÁRIO MODAL:
+        span.addEventListener('click', function(event){
+            modal.style.display = "none";
+        });
+        //Recupera as posts anteriores de todos os usuarios e exibe no navegador:
+        const socket = io('http://localhost:3000')
+
+        // Função de renderização de posts no navegador:
+        function renderPost(post){
+            $('.posts_container').append(`
+                <div class="post_container">
+                    <span>${post.titulo}</span>
+                    <br/>
+                    <p>${post.post}</p>
+                    <p>${post.data_hora}</p>
+                    <p>${post.nome}</p>
+                </div>
+            `);
+        }
+        // Recupera as posts anteriores de todos os usuários e exibe no navegador:
+        socket.on('previousPosts', function(posts){
+            for (post of posts){
+                renderPost(post);
+            }
+        });
+
+        // Renderiza novas posts enviadas por outros usuários:
+        socket.on('receivedPosts', function(post){
+            renderPost(post);
+        });
+
+        // Captura os dados da postagem:
+        $('#frm_post').submit(function(event){
+            event.preventDefault();
+
+            var titulo = $('input[name=txt_titulo]').val();
+            var post = $('input[name=txt_post]').val();
+            var nome = $('input[name=txt_nome]').val();
+
+
+            let data_hora_obj = new Date();
+            let data_hora_post = `[${data_hora_obj.toLocaleDateString()} - ${data_hora_obj.toLocaleTimeString()}]`;
+
+            var postObject = {
+                titulo: titulo,
+                post: post,
+                data_hora: data_hora_post,
+                nome: nome
+            };
+
+            renderPost(postObject);
+            socket.emit('sendPost', postObject);
+
+            console.log('JSON: ' + JSON.stringify(postObject));
+        });
+    </script>
+</html>
