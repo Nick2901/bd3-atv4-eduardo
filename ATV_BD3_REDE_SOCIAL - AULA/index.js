@@ -22,7 +22,7 @@ app.get('/', (req, res) => {
 
 // Conexão com MongoDB
 function connectDB() {
-    let dbURL = 'mongodb+srv://eduardo:Nick2901@cluster0.vn3gv.mongodb.net/';
+    let dbURL = '';
     mongoose.connect(dbURL);
     mongoose.connection.on('error', console.error.bind(console, 'Connection error:'));
     mongoose.connection.once('open', function () {
